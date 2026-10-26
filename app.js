@@ -291,16 +291,16 @@ const App = (() => {
       ? st.speedHistory.reduce((a, b) => a + b) / st.speedHistory.length : 0;
     const df   = Analytics.formatDistance(st.distanceM);
 
-    _setText('stat-maxspeed', Math.round(st.maxSpeed));
-    _setText('stat-avgspeed', Math.round(avg));
-    _setText('stat-distance', df.val);
-    _setText('stat-distance-unit', df.unit);
+    _setText('stat-maxspd', Math.round(st.maxSpeed));
+    _setText('stat-avgspd', Math.round(avg));
+    _setText('stat-dist', df.val);
+    _setText('stat-dist-unit', df.unit);
 
     // Activity
     const ac = Analytics.classifyActivity(speed, Sensor.getCurrent().mag);
-    _setText('activity-icon',    ac.icon);
-    _setText('activity-name',    ac.name + (ac.confidence ? ' · ' + ac.confidence : ''));
-    _setText('activity-signals', ac.signals.join(' · '));
+    _setText('act-icon',    ac.icon);
+    _setText('act-name',    ac.name + (ac.confidence ? ' · ' + ac.confidence : ''));
+    _setText('act-signals', ac.signals.join(' · '));
 
     // Journey tab quick numbers
     _setText('j-distance', df.val + ' ' + df.unit);
@@ -384,11 +384,8 @@ const App = (() => {
     _setText('stat-avgspeed',       '0');
     _setText('stat-distance',       '0');
     _setText('stat-distance-unit',  'm');
-    _setText('stat-duration',       '0:00');
+    _setText('stat-dur',             '0:00');
     _setText('j-distance',          '0 m');
-    _setText('j-duration',          '0:00');
-    _setText('j-moving',            '0:00');
-    _setText('j-stationary',        '0:00');
     _setText('j-gpspts',            '0');
     _setText('activity-icon',       '🧍');
     _setText('activity-name',       'Stationary');
@@ -526,10 +523,10 @@ const App = (() => {
   }
 
   function _setPermBadge(which, state, text) {
-    const el = document.getElementById('perm-' + which + '-status');
+    const el = document.getElementById('badge-' + which);
     if (!el) return;
     el.className   = 'perm-badge perm-' + state;
-    el.textContent = text;
+    el.textContent = text.toUpperCase();
   }
 
   function _bind(id, fn) {
@@ -541,7 +538,19 @@ const App = (() => {
   function _hide(id)  { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
   function _setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 
-  return { init, switchTab, startTracking, pauseTracking, resumeTracking, stopTracking, newSession, deleteSession };
+  // Public aliases for inline onclick handlers in HTML
+  const onInitClick     = _onInitClick;
+  const onPermsContinue = _onContinue;
+  function backToWelcome() { _showScreen('welcome'); }
+  function saveSession()   { _saveSession(); }
+  function discardSession(){ _discardSession(); }
+  function exportJSON()    { Storage.getSessions().then(s => Storage.exportJSON(s)); }
+  function exportCSV()     { Storage.getSessions().then(s => Storage.exportCSV(s)); }
+  function clearHistory()  { if (confirm('Delete all sessions?')) Storage.clearAll().then(_renderHistory); }
+
+  return { init, switchTab, startTracking, pauseTracking, resumeTracking, stopTracking,
+           newSession, deleteSession, onInitClick, onPermsContinue,
+           backToWelcome, saveSession, discardSession, exportJSON, exportCSV, clearHistory };
 })();
 
 window.App = App;
