@@ -334,7 +334,7 @@ const App = (() => {
   function _startTimer() {
     timerInterval = setInterval(() => {
       const elapsed = Date.now() - sessionStart - pausedMs;
-      _setText('stat-duration', Analytics.formatDuration(elapsed));
+      _setText('stat-dur', Analytics.formatDuration(elapsed));
       _setText('j-duration',    Analytics.formatDuration(elapsed));
       const st = GPS.getStats();
       _setText('j-moving',      Analytics.formatDuration(st.movingMs));
