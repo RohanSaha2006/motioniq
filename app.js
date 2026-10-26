@@ -318,7 +318,7 @@ const App = (() => {
   function _startTimer() {
     timerInterval = setInterval(() => {
       const elapsed = Date.now() - sessionStart - pausedMs;
-      _setText('stat-duration', Analytics.formatDuration(elapsed));
+      _setText('stat-dur', Analytics.formatDuration(elapsed));
       _setText('j-duration',    Analytics.formatDuration(elapsed));
       const st = GPS.getStats();
       _setText('j-moving',      Analytics.formatDuration(st.movingMs));
@@ -380,17 +380,15 @@ const App = (() => {
     state       = S.IDLE;
     renderSpd   = 0;
     _setText('speed-display',       '0');
-    _setText('stat-maxspeed',       '0');
-    _setText('stat-avgspeed',       '0');
-    _setText('stat-distance',       '0');
-    _setText('stat-distance-unit',  'm');
-    _setText('stat-dur',             '0:00');
-    _setText('j-distance',          '0 m');
-    _setText('j-gpspts',            '0');
-    _setText('activity-icon',       '🧍');
-    _setText('activity-name',       'Stationary');
-    _setText('activity-signals',    'Not tracking');
-    _setText('gps-quality',         'GPS: Waiting…');
+    _setText('stat-maxspd',      '0');
+    _setText('stat-avgspd',      '0');
+    _setText('stat-dist',        '0');
+    _setText('stat-dist-unit',   'm');
+    _setText('act-icon',         '🧍');
+    _setText('act-name',         'Stationary');
+    _setText('act-signals',      'Not tracking');
+
+    _setText('stat-dur', '0:00');
     GPS.reset(); Sensor.reset();
     _setCtrl('idle');
     _setBadge('idle');
