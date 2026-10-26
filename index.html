@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#050d1a">
+  <title>MotionIQ</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 1 — WELCOME
+═══════════════════════════════════════════════════ -->
+<div id="screen-welcome" class="screen active">
+  <div class="welcome-inner">
+
+    <div class="brand-logo">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+        <circle cx="19" cy="19" r="17" stroke="#0ea5e9" stroke-width="1.5" opacity="0.4"/>
+        <path d="M10 24 L16 14 L22 20 L28 12" stroke="#0ea5e9" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="19" cy="19" r="3" fill="#0ea5e9" opacity="0.6"/>
+      </svg>
+    </div>
+
+    <div>
+      <div class="brand-name">MOTIONIQ</div>
+      <div class="brand-tag">Smart Motion &amp; Journey Analyzer</div>
+    </div>
+
+    <div class="sensor-caps">
+      <div class="caps-title">Sensors Detected</div>
+      <div class="caps-list" id="caps-list">
+        <div class="cap-item cap-ok"><span class="cap-dot">●</span> GPS / Geolocation</div>
+        <div class="cap-item" id="cap-motion"><span class="cap-dot">○</span> Accelerometer</div>
+        <div class="cap-item" id="cap-orient"><span class="cap-dot">○</span> Gyroscope</div>
+      </div>
+    </div>
+
+    <div class="welcome-info">
+      <p>MotionIQ uses your phone's <strong>GPS</strong>, <strong>accelerometer</strong>, and <strong>gyroscope</strong> to track speed, distance, and movement patterns in real time.</p>
+      <p>Tap <strong>Initialize Sensors</strong> to grant permissions. No data leaves your device — everything is stored locally.</p>
+    </div>
+
+    <button class="btn-primary btn-large" onclick="App.onInitClick()">
+      <span class="btn-icon">⚡</span> Initialize Sensors
+    </button>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 2 — PERMISSIONS
+═══════════════════════════════════════════════════ -->
+<div id="screen-permission" class="screen">
+  <div class="perm-inner">
+
+    <div class="perm-header">
+      <h2>PERMISSIONS</h2>
+      <p>MotionIQ needs access to these device sensors</p>
+    </div>
+
+    <div class="perm-list">
+      <div class="perm-item">
+        <div class="perm-icon-wrap">📍</div>
+        <div class="perm-text">
+          <div class="perm-name">Location / GPS</div>
+          <div class="perm-desc">Speed, distance and journey map</div>
+        </div>
+        <div class="perm-badge perm-pending" id="badge-gps">PENDING</div>
+      </div>
+      <div class="perm-item">
+        <div class="perm-icon-wrap">📲</div>
+        <div class="perm-text">
+          <div class="perm-name">Accelerometer</div>
+          <div class="perm-desc">Motion detection and activity</div>
+        </div>
+        <div class="perm-badge perm-pending" id="badge-motion">PENDING</div>
+      </div>
+      <div class="perm-item">
+        <div class="perm-icon-wrap">🔄</div>
+        <div class="perm-text">
+          <div class="perm-name">Gyroscope</div>
+          <div class="perm-desc">Orientation and rotation data</div>
+        </div>
+        <div class="perm-badge perm-pending" id="badge-orient">PENDING</div>
+      </div>
+    </div>
+
+    <div class="perm-error" id="perm-error"></div>
+
+    <div class="perm-actions">
+      <button class="btn-primary" id="btn-request-perms" onclick="App.onRequestPerms()">
+        <span class="btn-icon">🔐</span> Grant Permissions
+      </button>
+      <button class="btn-primary" id="btn-continue-app" style="display:none" onclick="App.onPermsContinue()">
+        <span class="btn-icon">✓</span> Continue to App
+      </button>
+      <button class="btn-secondary" onclick="App.backToWelcome()">← Back</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 3 — MAIN APP
+═══════════════════════════════════════════════════ -->
+<div id="screen-app" class="screen">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-brand">MOTIONIQ</div>
+    <div class="session-badge badge-idle" id="session-badge">IDLE</div>
+  </div>
+
+  <!-- ── TAB: DASHBOARD ─────────────────────────────── -->
+  <div id="tab-dashboard" class="tab-content active">
+    <div class="scroll-area">
+
+      <!-- Speedometer -->
+      <div class="card gauge-card">
+        <div class="gauge-wrap">
+          <canvas id="speedometer"></canvas>
+          <div class="speed-overlay">
+            <div class="speed-big" id="speed-display">0</div>
+            <div class="speed-unit">km/h</div>
+          </div>
+        </div>
+        <div class="gps-quality" id="gps-quality">GPS: Searching…</div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-label">Distance</div>
+          <div class="stat-value" id="stat-dist">0</div>
+          <div class="stat-unit" id="stat-dist-unit">m</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Max Speed</div>
+          <div class="stat-value" id="stat-maxspd">0</div>
+          <div class="stat-unit">km/h</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Duration</div>
+          <div class="stat-value" id="stat-dur">0:00</div>
+          <div class="stat-unit">&nbsp;</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Avg Speed</div>
+          <div class="stat-value" id="stat-avgspd">0</div>
+          <div class="stat-unit">km/h</div>
+        </div>
+      </div>
+
+      <!-- Activity -->
+      <div class="card">
+        <div class="card-label">Activity</div>
+        <div class="activity-display">
+          <div class="activity-icon" id="act-icon">🧍</div>
+          <div>
+            <div class="activity-name" id="act-name">Stationary</div>
+            <div class="activity-signals" id="act-signals">Waiting for session</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── TAB: MOTION ────────────────────────────────── -->
+  <div id="tab-motion" class="tab-content">
+    <div class="scroll-area">
+
+      <div class="card">
+        <div class="card-label">Accelerometer <span class="sensor-status" id="sensor-status-label">● Live</span></div>
+        <div class="axis-values" id="accel-vals">
+          <span class="axis-val"><span class="axis-key x-key">X</span><span id="ax-x">0.00</span></span>
+          <span class="axis-val"><span class="axis-key y-key">Y</span><span id="ax-y">0.00</span></span>
+          <span class="axis-val"><span class="axis-key z-key">Z</span><span id="ax-z">0.00</span></span>
+          <span class="axis-val"><span class="axis-key m-key">|M|</span><span id="ax-m">0.00</span></span>
+        </div>
+        <canvas id="accel-graph"></canvas>
+        <div class="sensor-note">X/Y/Z acceleration including gravity (m/s²). Peak: <span id="accel-peak">0.00</span> m/s²</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Gyroscope / Orientation</div>
+        <div class="axis-values" id="gyro-vals">
+          <span class="axis-val"><span class="axis-key x-key">α</span><span id="gy-a">0.0</span>°</span>
+          <span class="axis-val"><span class="axis-key y-key">β</span><span id="gy-b">0.0</span>°</span>
+          <span class="axis-val"><span class="axis-key z-key">γ</span><span id="gy-g">0.0</span>°</span>
+        </div>
+        <canvas id="gyro-graph"></canvas>
+        <div class="sensor-note">α=compass, β=front/back tilt, γ=left/right tilt (degrees)</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Motion Analytics</div>
+        <div class="analytics-grid">
+          <div class="an-field">
+            <div class="an-key">Motion Events</div>
+            <div class="an-val" id="motion-events">0</div>
+          </div>
+          <div class="an-field">
+            <div class="an-key">Peak Accel</div>
+            <div class="an-val" id="peak-accel-an">0.00 m/s²</div>
+          </div>
+          <div class="an-field">
+            <div class="an-key">Sample Rate</div>
+            <div class="an-val" id="sample-rate">—</div>
+          </div>
+          <div class="an-field">
+            <div class="an-key">Status</div>
+            <div class="an-val" id="sensor-status-val">Idle</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── TAB: JOURNEY ───────────────────────────────── -->
+  <div id="tab-journey" class="tab-content">
+    <div class="scroll-area">
+
+      <div class="journey-stats">
+        <div class="j-stat">
+          <div class="j-stat-val" id="j-distance">0 m</div>
+          <div class="j-stat-key">Distance</div>
+        </div>
+        <div class="j-stat">
+          <div class="j-stat-val" id="j-maxspd">0 km/h</div>
+          <div class="j-stat-key">Top Speed</div>
+        </div>
+        <div class="j-stat">
+          <div class="j-stat-val" id="j-avgspd">0 km/h</div>
+          <div class="j-stat-key">Avg Speed</div>
+        </div>
+        <div class="j-stat">
+          <div class="j-stat-val" id="j-gpspts">0</div>
+          <div class="j-stat-key">GPS Points</div>
+        </div>
+      </div>
+
+      <div class="card map-card">
+        <div class="card-label">
+          Route Map
+          <span class="map-badge">OFFLINE</span>
+        </div>
+        <canvas id="journey-map"></canvas>
+        <div class="map-placeholder" id="map-placeholder">
+          🗺 Start a session to see your route plotted here.<br>No internet required — GPS coordinates only.
+        </div>
+        <div class="map-legend">
+          <span class="legend-dot" style="background:#00e87a"></span>&nbsp;Start &nbsp;
+          <span class="legend-dot" style="background:#0ea5e9"></span>&nbsp;Current
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">GPS Details</div>
+        <div class="gps-grid">
+          <div class="gps-field">
+            <div class="gps-key">Latitude</div>
+            <div class="gps-val" id="gps-lat">—</div>
+          </div>
+          <div class="gps-field">
+            <div class="gps-key">Longitude</div>
+            <div class="gps-val" id="gps-lon">—</div>
+          </div>
+          <div class="gps-field">
+            <div class="gps-key">Altitude</div>
+            <div class="gps-val" id="gps-alt">—</div>
+          </div>
+          <div class="gps-field">
+            <div class="gps-key">Accuracy</div>
+            <div class="gps-val" id="gps-accuracy">—</div>
+          </div>
+          <div class="gps-field">
+            <div class="gps-key">Heading</div>
+            <div class="gps-val" id="gps-heading">—</div>
+          </div>
+          <div class="gps-field">
+            <div class="gps-key">Speed Source</div>
+            <div class="gps-val" id="gps-source">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── TAB: HISTORY ───────────────────────────────── -->
+  <div id="tab-history" class="tab-content">
+    <div class="scroll-area">
+
+      <div class="history-actions">
+        <button class="btn-sm" onclick="App.exportJSON()">⬇ JSON</button>
+        <button class="btn-sm" onclick="App.exportCSV()">⬇ CSV</button>
+        <button class="btn-sm btn-danger-sm" onclick="App.clearHistory()">🗑 Clear All</button>
+      </div>
+
+      <div class="history-empty" id="history-empty">
+        📂 No sessions yet<br>
+        <span class="history-empty-sub">Complete a session to see it here</span>
+      </div>
+
+      <div class="history-list" id="history-list"></div>
+
+    </div>
+  </div>
+
+  <!-- ── TAB: SETTINGS ─────────────────────────────── -->
+  <div id="tab-settings" class="tab-content">
+    <div class="scroll-area">
+
+      <div class="settings-section">
+        <div class="settings-title">GPS</div>
+        <div class="setting-row">
+          <div class="setting-label">Accuracy Threshold</div>
+          <div class="setting-val">≤ 50 m (fixes above this are filtered)</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">Max Plausible Speed</div>
+          <div class="setting-val">300 km/h (sanity cap)</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">Update Mode</div>
+          <div class="setting-val">High accuracy, continuous</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Sensors</div>
+        <div class="setting-row">
+          <div class="setting-label">Graph Buffer</div>
+          <div class="setting-val">150 samples (rolling)</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">Motion Event Threshold</div>
+          <div class="setting-val">|accel| &gt; 14 m/s²</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">Motion Event Cooldown</div>
+          <div class="setting-val">400 ms</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Storage</div>
+        <div class="setting-row">
+          <div class="setting-label">Database</div>
+          <div class="setting-val">IndexedDB (on-device)</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">Session Limit</div>
+          <div class="setting-val">No limit (device storage)</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">Export Formats</div>
+          <div class="setting-val">JSON, CSV</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Device</div>
+        <div class="setting-row">
+          <div class="setting-label">User Agent</div>
+          <div class="setting-val settings-ua" id="ua-string">detecting…</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">Pixel Ratio</div>
+          <div class="setting-val" id="dpr-val">detecting…</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">PWA Mode</div>
+          <div class="setting-val" id="pwa-mode">detecting…</div>
+        </div>
+      </div>
+
+      <div class="settings-note">
+        MotionIQ is a Privacy-first PWA. No data is sent to any server. All readings, sessions, and exports stay on your device.<br><br>
+        Install via Chrome → ⋮ → <strong>Add to Home Screen</strong> for offline use and full-screen experience.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Session controls bar -->
+  <div class="session-controls">
+    <div id="ctrl-idle">
+      <button class="btn-primary btn-track" onclick="App.startTracking()">
+        <span class="btn-icon">▶</span> Start Session
+      </button>
+    </div>
+    <div id="ctrl-tracking">
+      <span class="rec-indicator">⬤ REC</span>
+      <button class="btn-secondary btn-sm-ctrl" onclick="App.pauseTracking()">⏸ Pause</button>
+      <button class="btn-danger btn-sm-ctrl" onclick="App.stopTracking()">⏹ Stop</button>
+    </div>
+    <div id="ctrl-paused">
+      <button class="btn-primary btn-sm-ctrl" onclick="App.resumeTracking()">▶ Resume</button>
+      <button class="btn-danger btn-sm-ctrl" onclick="App.stopTracking()">⏹ Stop</button>
+    </div>
+    <div id="ctrl-stopped">
+      <button class="btn-secondary btn-sm-ctrl" onclick="App.newSession()">↺ New</button>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-tab="dashboard" onclick="App.switchTab('dashboard', this)">
+      <span class="nav-icon">⚡</span>
+      <span class="nav-label">Dashboard</span>
+    </button>
+    <button class="nav-item" data-tab="motion" onclick="App.switchTab('motion', this)">
+      <span class="nav-icon">📲</span>
+      <span class="nav-label">Motion</span>
+    </button>
+    <button class="nav-item" data-tab="journey" onclick="App.switchTab('journey', this)">
+      <span class="nav-icon">🗺</span>
+      <span class="nav-label">Journey</span>
+    </button>
+    <button class="nav-item" data-tab="history" onclick="App.switchTab('history', this)">
+      <span class="nav-icon">📂</span>
+      <span class="nav-label">History</span>
+    </button>
+    <button class="nav-item" data-tab="settings" onclick="App.switchTab('settings', this)">
+      <span class="nav-icon">⚙</span>
+      <span class="nav-label">Settings</span>
+    </button>
+  </nav>
+
+</div><!-- /screen-app -->
+
+
+<!-- ══════════════════════════════════════════════════
+     SESSION SUMMARY MODAL
+═══════════════════════════════════════════════════ -->
+<div id="session-summary" style="display:none">
+  <div class="modal-inner">
+    <div class="modal-title">SESSION COMPLETE</div>
+    <div class="summary-grid" id="summary-content"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="App.saveSession()">
+        <span class="btn-icon">💾</span> Save Session
+      </button>
+      <button class="btn-secondary" onclick="App.discardSession()">Discard</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Scripts — order matters: dependencies first -->
+<script src="storage.js"></script>
+<script src="analytics.js"></script>
+<script src="sensor.js"></script>
+<script src="gps.js"></script>
+<script src="app.js"></script>
+
+<script>
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(r => console.log('[SW] registered', r.scope))
+        .catch(e => console.warn('[SW] failed:', e));
+    });
+  }
+</script>
+
+</body>
+</html>
