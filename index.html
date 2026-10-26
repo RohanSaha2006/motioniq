@@ -98,10 +98,10 @@
     <div class="perm-error" id="perm-error"></div>
 
     <div class="perm-actions">
-      <button class="btn-primary" id="btn-request-perms" onclick="App.onRequestPerms()">
-        <span class="btn-icon">🔐</span> Grant Permissions
+      <button class="btn-primary" id="btn-retry" style="display:none" onclick="App.onInitClick()">
+        <span class="btn-icon">↺</span> Try Again
       </button>
-      <button class="btn-primary" id="btn-continue-app" style="display:none" onclick="App.onPermsContinue()">
+      <button class="btn-primary" id="btn-continue" style="display:none" onclick="App.onPermsContinue()">
         <span class="btn-icon">✓</span> Continue to App
       </button>
       <button class="btn-secondary" onclick="App.backToWelcome()">← Back</button>
