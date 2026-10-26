@@ -682,6 +682,51 @@ canvas { display: block; }
 .modal-actions .btn-primary  { flex: 2; }
 .modal-actions .btn-secondary { flex: 1; font-size: 12px; }
 
+/* ── Light mode ──────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:      #f0f4f8;
+  --bg2:     #e4eaf2;
+  --bg3:     #d8e2ed;
+  --card:    #ffffff;
+  --border:  #c8d6e5;
+  --text:    #0d1e32;
+  --text2:   #4a6580;
+  --text3:   #8aabca;
+}
+[data-theme="light"] body { background: var(--bg); color: var(--text); }
+[data-theme="light"] #screen-welcome {
+  background: linear-gradient(160deg, #e8f0fa 0%, #dceaf8 60%, #e4edf9 100%);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 13px 16px;
+  width: 100%;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.theme-toggle:active { opacity: 0.8; }
+.theme-toggle-label { display: flex; align-items: center; gap: 10px; }
+.theme-pill {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  letter-spacing: 0.5px;
+}
+
 /* ── Scrollbar styling ───────────────────────────────── */
 ::-webkit-scrollbar        { width: 3px; }
 ::-webkit-scrollbar-track  { background: transparent; }
