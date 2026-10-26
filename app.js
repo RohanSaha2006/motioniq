@@ -20,6 +20,15 @@ const App = (() => {
 
   /* ── Bootstrap ──────────────────────────────────────── */
   function init() {
+    // Restore saved theme
+    try {
+      const saved = localStorage.getItem('miq-theme');
+      if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
+        _setText('theme-label', saved.toUpperCase());
+      }
+    } catch(e) {}
+
     // PWA service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js')
@@ -107,6 +116,13 @@ const App = (() => {
       _setPermBadge('motion', 'na', 'Not Available');
     } else {
       _setPermBadge('motion', 'denied', motionSt.motion === 'denied' ? 'Denied' : 'Error');
+    }
+
+    // Gyroscope — DeviceOrientationEvent is auto-granted on Android; just check availability
+    if (typeof DeviceOrientationEvent !== 'undefined') {
+      _setPermBadge('orient', 'granted', 'Available');
+    } else {
+      _setPermBadge('orient', 'na', 'Not Available');
     }
 
     if (!gpsOk) {
@@ -318,7 +334,7 @@ const App = (() => {
   function _startTimer() {
     timerInterval = setInterval(() => {
       const elapsed = Date.now() - sessionStart - pausedMs;
-      _setText('stat-dur', Analytics.formatDuration(elapsed));
+      _setText('stat-duration', Analytics.formatDuration(elapsed));
       _setText('j-duration',    Analytics.formatDuration(elapsed));
       const st = GPS.getStats();
       _setText('j-moving',      Analytics.formatDuration(st.movingMs));
@@ -380,15 +396,17 @@ const App = (() => {
     state       = S.IDLE;
     renderSpd   = 0;
     _setText('speed-display',       '0');
-    _setText('stat-maxspd',      '0');
-    _setText('stat-avgspd',      '0');
-    _setText('stat-dist',        '0');
-    _setText('stat-dist-unit',   'm');
-    _setText('act-icon',         '🧍');
-    _setText('act-name',         'Stationary');
-    _setText('act-signals',      'Not tracking');
-
-    _setText('stat-dur', '0:00');
+    _setText('stat-maxspeed',       '0');
+    _setText('stat-avgspeed',       '0');
+    _setText('stat-distance',       '0');
+    _setText('stat-distance-unit',  'm');
+    _setText('stat-dur',             '0:00');
+    _setText('j-distance',          '0 m');
+    _setText('j-gpspts',            '0');
+    _setText('activity-icon',       '🧍');
+    _setText('activity-name',       'Stationary');
+    _setText('activity-signals',    'Not tracking');
+    _setText('gps-quality',         'GPS: Waiting…');
     GPS.reset(); Sensor.reset();
     _setCtrl('idle');
     _setBadge('idle');
@@ -502,7 +520,7 @@ const App = (() => {
   function _setCtrl(which) {
     ['idle', 'tracking', 'paused', 'stopped'].forEach(s => {
       const el = document.getElementById('ctrl-' + s);
-      if (el) el.style.display = s === which ? '' : 'none';
+      if (el) el.style.display = s === which ? 'flex' : 'none';
     });
   }
 
@@ -545,10 +563,17 @@ const App = (() => {
   function exportJSON()    { Storage.getSessions().then(s => Storage.exportJSON(s)); }
   function exportCSV()     { Storage.getSessions().then(s => Storage.exportCSV(s)); }
   function clearHistory()  { if (confirm('Delete all sessions?')) Storage.clearAll().then(_renderHistory); }
+  function toggleTheme() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const next = isLight ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    _setText('theme-label', next.toUpperCase());
+    try { localStorage.setItem('miq-theme', next); } catch(e) {}
+  }
 
   return { init, switchTab, startTracking, pauseTracking, resumeTracking, stopTracking,
            newSession, deleteSession, onInitClick, onPermsContinue,
-           backToWelcome, saveSession, discardSession, exportJSON, exportCSV, clearHistory };
+           backToWelcome, saveSession, discardSession, exportJSON, exportCSV, clearHistory, toggleTheme };
 })();
 
 window.App = App;
